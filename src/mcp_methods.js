@@ -80,7 +80,7 @@ const methods = {
                 throw err;
             }
             // Otherwise, log and re-throw as a potential database error
-            console.error(`Error removing todo item with ID ${id}:`, err);
+            console.error(`Error removing todo item with ID ${id}:`, JSON.stringify(err));
             throw err;
         }
     },

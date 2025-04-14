@@ -42,33 +42,40 @@ app.get('/', (req, res) => {
 });
 
 // Basic Error Handler Middleware
-// Catches errors thrown from async route handlers
+// Catches errors thrown from async route handlers, etc.
 app.use((err, req, res, next) => {
   console.error('[Global Error Handler]:', err);
 
-  // Check for body-parser specific JSON parse error
-  if (err instanceof SyntaxError && err.statusCode >= 400 && err.statusCode < 500 && 'body' in err) {
-      console.log('Caught body-parser JSON SyntaxError, sending JSON-RPC Parse Error');
-      res.status(200).json({
-          jsonrpc: "2.0",
-          error: { code: -32700, message: "Parse error: Invalid JSON was received by the server." },
-          id: null // id is null for Parse error according to spec
-      });
-      return; // Stop further processing
+  if (res.headersSent) {
+    // Response already started, delegate to default Express handler
+    return next(err);
   }
 
-  // Check if it's a known JSONRPCErrorException or send a generic 500
-  // (The JSONRPCServer middleware will likely handle its own errors before this)
-  if (res.headersSent) {
-    return next(err); // Delegate to default Express error handler if headers sent
+  try {
+      // Set status and headers first
+      res.status(500);
+      res.setHeader('Content-Type', 'application/json');
+
+      // Prepare payload
+      const errorPayload = {
+        error: {
+          message: err.message || 'Internal Server Error',
+          // Include stack trace in development for debugging
+          stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        },
+      };
+
+      // Send the response body
+      res.send(JSON.stringify(errorPayload));
+
+      // Note: We are not calling next() here because we've handled the error
+
+  } catch (handlerError) {
+      // If sending our custom error response fails, log it
+      // and delegate to the default Express handler with the *original* error.
+      console.error("Error occurred within global error handler:", handlerError);
+      next(err);
   }
-  res.status(500).json({
-    error: {
-      message: err.message || 'Internal Server Error',
-      // Avoid leaking stack trace in production
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    },
-  });
 });
 
 async function startServer() {

@@ -1,10 +1,10 @@
-// tests/mcp_methods.test.js
-const mcpMethods = require('../src/mcp_methods');
-const db = require('../src/db'); // Import the original db module to be mocked
+// tests/unit_tests/mcp_methods.test.js
+const mcpMethods = require('../../src/mcp_methods');
+const db = require('../../src/db'); // Import the original db module to be mocked
 const { JSONRPCErrorException } = require('json-rpc-2.0'); // To check for specific error types
 
 // Mock the db module
-jest.mock('../src/db', () => ({
+jest.mock('../../src/db', () => ({
     query: jest.fn(), // Mock the query function
     // We don't need to mock pool or initializeDatabase for these unit tests
 }));

@@ -1,37 +1,43 @@
 // tests/db.test.js
-const { pool, query, initializeDatabase } = require('../src/db'); // Adjust path as necessary
 
-// Ensure the database schema is initialized before any tests run
+// DO NOT MOCK pg or fs HERE - These tests need the real DB
+const { pool, query, initializeDatabase } = require('../../src/db');
+
+// --- Real DB Tests --- 
+
+// Ensure the *real* database schema is initialized before integration tests run
+// This relies on the actual initializeDatabase connecting to the Docker container.
 beforeAll(async () => {
     try {
-        // Use the same retry logic as the main app initialization
+        // Use the actual initializeDatabase with retry logic
         await initializeDatabase();
-        console.log('Test DB schema initialized successfully.');
+        console.log('Test DB schema initialized successfully for integration tests.');
     } catch (error) {
-        console.error("FATAL: Failed to initialize database for testing after retries:", error);
-        // Force exit if DB init fails, as tests are likely pointless
+        console.error("FATAL: Failed to initialize database for integration testing:", error);
         process.exit(1);
     }
 });
 
-// Clean the todos table before each test
+// Clean the todos table before each test using the *real* query function
 beforeEach(async () => {
     try {
         await query('DELETE FROM todos');
     } catch (error) {
-        console.error("Failed to clean todos table before test:", error);
-        // Handle error appropriately, maybe skip test or fail suite
+        // Log error but don't necessarily fail the suite, individual tests might handle it
+        console.error("Error cleaning todos table before test:", error);
     }
 });
 
-// Close the pool after all tests are done
+// Close the *real* pool after all tests are done
 afterAll(async () => {
     await pool.end();
 });
 
-describe('Database Initialization', () => {
+
+// Original describe blocks for actual DB interaction tests
+describe('Database Initialization (Integration - Real DB)', () => {
     it('should create the todos table', async () => {
-        // Check if the table exists in pg_catalog.pg_tables
+        // Check if the table exists in pg_catalog.pg_tables using the real query
         const res = await query(
             "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema' AND tablename = $1",
             ['todos']
@@ -41,9 +47,10 @@ describe('Database Initialization', () => {
     });
 });
 
-describe('Todo Table Operations', () => {
+describe('Todo Table Operations (Integration - Real DB)', () => {
     it('should allow inserting a new todo item', async () => {
         const text = 'Test todo item';
+        // Use real query
         const insertRes = await query('INSERT INTO todos(text) VALUES($1) RETURNING *', [text]);
         expect(insertRes.rows.length).toBe(1);
         expect(insertRes.rows[0].text).toBe(text);

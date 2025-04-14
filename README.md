@@ -39,8 +39,28 @@ It uses Node.js, Express, and PostgreSQL (via Docker) for persistence.
 
 Ensure the PostgreSQL container is running (`docker compose up -d db`).
 
+Tests are separated into `tests/unit_tests` and `tests/integration_tests`. The following command runs all tests:
+
 ```bash
 npm test
+```
+
+### Running Coverage Report
+
+```bash
+npm run coverage
+```
+This will output a summary to the terminal and generate a detailed HTML report in the `coverage/lcov-report/` directory, reflecting coverage from both unit and integration tests.
+
+### Running End-to-End Test Script
+
+The project includes an orchestrator script (`run_full_test.sh`) that performs a full sequence of tests using `curl` against a live server, including cleaning the database beforehand and providing a summary report. This is the recommended way to perform a manual end-to-end check.
+
+**Prerequisites:** `curl`, `jq`
+
+```bash
+chmod +x run_full_test.sh test_server.sh # Ensure scripts are executable
+./run_full_test.sh
 ```
 
 ## API Usage (JSON-RPC 2.0 via HTTP POST)

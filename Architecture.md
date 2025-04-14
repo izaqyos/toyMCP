@@ -24,6 +24,7 @@ The project is structured into several key components located primarily within t
 *   **`src/server.js` (Server Entry Point):**
     *   Initializes the Express application.
     *   Applies necessary middleware (e.g., `express.json()` for parsing request bodies).
+    *   Includes a dedicated error handler middleware immediately following `express.json()` to catch JSON syntax errors and return a specific JSON-RPC Parse Error (-32700).
     *   Mounts the MCP router (`mcp_router.js`) at the `/mcp` path.
     *   Includes a basic root route (`/`) for health checks.
     *   Defines a global error handling middleware to catch unhandled errors and format responses (including specific handling for JSON parsing errors).
@@ -60,9 +61,15 @@ The project is structured into several key components located primarily within t
     *   Defines a named volume (`postgres_data`) to ensure data persistence across container restarts.
 
 *   **`tests/` (Automated Tests):**
-    *   `db.test.js`: Integration tests verifying the database connection, schema initialization (`initializeDatabase`), and basic SQL operations against a real (test) database instance. Uses Jest hooks (`beforeAll`, `afterAll`, `beforeEach`) for setup and teardown.
-    *   `mcp_methods.test.js`: Unit tests for the business logic in `src/mcp_methods.js`. Uses `jest.mock` to mock the `src/db` module, isolating the tests from the actual database. Verifies parameter validation, successful execution paths, and error handling.
-    *   `server.test.js`: Integration tests for the full HTTP request/response cycle. Uses `supertest` to send HTTP requests to the Express app (`/mcp` endpoint). Interacts with the real database to verify the side effects of API calls. Tests valid requests, various error conditions (invalid JSON, unknown method, invalid parameters, item not found), and the basic root route.
+    *   Tests are organized into subdirectories:
+        *   `unit_tests/`: Contains unit tests that typically mock external dependencies (like the database or other modules) to test components in isolation.
+            *   `db_init_logic.test.js`: Tests the retry and error handling logic within `src/db/index.js`'s `initializeDatabase` function using mocks.
+            *   `mcp_methods.test.js`: Unit tests for the business logic in `src/mcp_methods.js`. Uses `jest.mock` to mock the `src/db` module.
+            *   `server_error_handling.test.js`: Tests the error handling middleware in `src/server.js` using mocks.
+        *   `integration_tests/`: Contains integration tests that verify the interaction between multiple components, often including real database connections.
+            *   `db_integration.test.js`: Integration tests verifying the database connection, schema initialization, and basic SQL operations against the real database instance.
+            *   `server_integration.test.js`: Integration tests for the full HTTP request/response cycle using `supertest`. Interacts with the real database.
+    *   `setup.js`: Jest setup file used via `setupFilesAfterEnv` to configure the test environment (e.g., redirecting console output).
 
 ## 4. Architecture Diagrams
 

@@ -31,10 +31,14 @@ toyMCP/
 │   │   └── schema.sql    # SQL script to create the 'todos' table
 │   └── config.js       # Configuration (DB connection details, etc.)
 └── tests/
-    ├── setup.js        # Jest setup file (e.g., for DB setup/teardown)
-    ├── db.test.js      # Tests for database interactions
-    ├── mcp_methods.test.js # Unit tests for MCP method logic
-    └── server.test.js    # Integration tests for the MCP endpoint
+    ├── setup.js        # Jest setup file (e.g., for console redirection)
+    ├── unit_tests/     # Unit tests with mocks
+    │   ├── db_init_logic.test.js
+    │   ├── mcp_methods.test.js
+    │   └── server_error_handling.test.js
+    └── integration_tests/ # Integration tests with real DB
+        ├── db_integration.test.js
+        └── server_integration.test.js
 ```
 
 ## 3. Core Files Maintenance
@@ -53,19 +57,6 @@ toyMCP/
 *   **Phase 4: Refinement & Documentation:** Refactor, ensure test coverage, finalize `README.md` and `TASKS.md`.
 *   **Phase 5: Manual Integration Testing:**
     *   **Goal:** Verify the running server interacts correctly with the database via MCP requests sent from an external client.
-    *   **Method:** Start the server (`npm start` or similar) and the PostgreSQL container (`docker-compose up`). Use a tool to send JSON-RPC 2.0 requests to the `/mcp` endpoint (e.g., `http://localhost:3000/mcp`).
-    *   **Tools:**
-        *   `curl`: Send POST requests from the command line with the JSON-RPC payload.
-            ```bash
-            # Example: Add item
-            curl -X POST -H "Content-Type: application/json" \
-                 -d '{"jsonrpc": "2.0", "method": "todo.add", "params": {"text": "Buy milk"}, "id": 1}' \
-                 http://localhost:3000/mcp
-
-            # Example: List items
-            curl -X POST -H "Content-Type: application/json" \
-                 -d '{"jsonrpc": "2.0", "method": "todo.list", "id": 2}' \
-                 http://localhost:3000/mcp
-            ```
-        *   **API Clients (Postman, Insomnia):** Create a POST request, set `Content-Type: application/json`, and put the JSON-RPC payload in the raw JSON body.
-    *   **Verification:** Check JSON-RPC responses and inspect the `todos` table in the PostgreSQL database. 
+    *   **Method:** Use the `./run_full_test.sh` script. This orchestrator script handles cleaning the database volume, starting the DB and server, running a sequence of `curl` requests defined in `test_server.sh` (covering add, list, remove, and error cases), reporting results, and stopping the server. Alternatively, use tools like `curl` or API clients (Postman/Insomnia) to manually send JSON-RPC 2.0 requests to the `/mcp` endpoint (e.g., `http://127.0.0.1:3000/mcp`).
+    *   **Tools:** `run_full_test.sh` (recommended), `test_server.sh` (uses `curl`, `jq`), manual `curl`, Postman, Insomnia.
+    *   **Verification:** Check the output report from `run_full_test.sh`. If testing manually, check JSON-RPC responses and inspect the `todos` table in the PostgreSQL database. 

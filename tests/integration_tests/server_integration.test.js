@@ -1,6 +1,7 @@
 const request = require('supertest');
-const app = require('../src/server'); // Our Express app
-const { pool, query, initializeDatabase } = require('../src/db');
+
+const app = require('../../src/server'); // Import app normally
+const { pool, query, initializeDatabase } = require('../../src/db');
 
 // Database setup/teardown for integration tests
 beforeAll(async () => {
@@ -221,6 +222,22 @@ describe('MCP Endpoint (/mcp)', () => {
             // Check custom error code defined in mcp_methods.js
             expect(res.body.error.code).toBe(1001); // Our custom 'Not Found' code
             expect(res.body.error.message).toContain(`Todo item with ID ${nonExistentId} not found`);
+        });
+    });
+
+    describe('Notifications', () => {
+        it('should handle a notification request (no id) with 204 No Content', async () => {
+            const notificationRequest = {
+                jsonrpc: '2.0',
+                method: 'todo.add', // Method doesn't strictly matter, id absence is key
+                params: { text: 'This is a notification' }
+                // No 'id' field
+            };
+
+            await request(app)
+                .post('/mcp')
+                .send(notificationRequest)
+                .expect(204); // Expect No Content status, no body
         });
     });
 

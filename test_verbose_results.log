@@ -1,0 +1,107 @@
+Attempt 1/5: Connecting to database...
+Attempt 1/5: Database connected. Executing schema...
+Attempt 1/5: Database schema initialized successfully.
+--- MCP Request Received ---
+Headers: {
+  "host": "127.0.0.1:58433",
+  "accept-encoding": "gzip, deflate",
+  "content-type": "application/json",
+  "content-length": "85",
+  "connection": "close"
+}
+Raw Body: {
+  jsonrpc: '2.0',
+  method: 'todo.add',
+  params: { text: 'Integration test add' },
+  id: 1
+}
+----------------------------
+--- MCP Request Received ---
+Headers: {
+  "host": "127.0.0.1:58435",
+  "accept-encoding": "gzip, deflate",
+  "content-type": "application/json",
+  "content-length": "45",
+  "connection": "close"
+}
+Raw Body: { jsonrpc: '2.0', method: 'todo.list', id: 2 }
+----------------------------
+--- MCP Request Received ---
+Headers: {
+  "host": "127.0.0.1:58437",
+  "accept-encoding": "gzip, deflate",
+  "content-type": "application/json",
+  "content-length": "45",
+  "connection": "close"
+}
+Raw Body: { jsonrpc: '2.0', method: 'todo.list', id: 3 }
+----------------------------
+--- MCP Request Received ---
+Headers: {
+  "host": "127.0.0.1:58439",
+  "accept-encoding": "gzip, deflate",
+  "content-type": "application/json",
+  "content-length": "67",
+  "connection": "close"
+}
+Raw Body: { jsonrpc: '2.0', method: 'todo.remove', params: { id: 141 }, id: 4 }
+----------------------------
+--- JSON Syntax Error Handler Triggered ---
+Error Type: [object Error]
+Is SyntaxError?: true
+Error Status Code: 400
+Has Body Property?: true
+Error Message: Expected ',' or '}' after property value in JSON at position 60 (line 1 column 61)
+-----------------------------------------
+Caught body-parser JSON SyntaxError, sending JSON-RPC Parse Error (-32700)
+--- MCP Request Received ---
+Headers: {
+  "host": "127.0.0.1:58443",
+  "accept-encoding": "gzip, deflate",
+  "content-type": "application/json",
+  "content-length": "13",
+  "connection": "close"
+}
+Raw Body: { foo: 'bar' }
+----------------------------
+--- MCP Request Received ---
+Headers: {
+  "host": "127.0.0.1:58445",
+  "accept-encoding": "gzip, deflate",
+  "content-type": "application/json",
+  "content-length": "66",
+  "connection": "close"
+}
+Raw Body: { jsonrpc: '2.0', method: 'nonexistent.method', params: {}, id: 5 }
+----------------------------
+--- MCP Request Received ---
+Headers: {
+  "host": "127.0.0.1:58447",
+  "accept-encoding": "gzip, deflate",
+  "content-type": "applicatiAttempt 2/3: Connecting to database...
+Attempt 2/3: Database connected. Executing schema...
+Attempt 2/3: Database schema initialized successfully.
+Attempt 1/3: Connecting to database...
+[ERROR] Attempt 1/3: Error during DB initialization: Connection failed persistently
+Waiting 0.1 seconds before next attempt...
+Attempt 2/3: Connecting to database...
+[ERROR] Attempt 2/3: Error during DB initialization: Connection failed persistently
+Waiting 0.1 seconds before next attempt...
+Attempt 3/3: Connecting to database...
+[ERROR] Attempt 3/3: Error during DB initialization: Connection failed persistently
+[ERROR] Max retries reached. Failed to initialize database.
+Attempt 1/3: Connecting to database...
+Attempt 1/3: Database connected. Executing schema...
+[ERROR] Attempt 1/3: Error during DB initialization: Query failed persistently
+Waiting 0.1 seconds before next attempt...
+Attempt 2/3: Connecting to database...
+Attempt 2/3: Database connected. Executing schema...
+[ERROR] Attempt 2/3: Error during DB initialization: Query failed persistently
+Waiting 0.1 seconds before next attempt...
+Attempt 3/3: Connecting to database...
+Attempt 3/3: Database connected. Executing schema...
+[ERROR] Attempt 3/3: Error during DB initialization: Query failed persistently
+[ERROR] Max retries reached. Failed to initialize database.
+rams: { text: 'This is a notification' }
+}
+----------------------------
