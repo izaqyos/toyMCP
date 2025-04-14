@@ -4,10 +4,12 @@ const { pool, query, initializeDatabase } = require('../src/db'); // Adjust path
 // Ensure the database schema is initialized before any tests run
 beforeAll(async () => {
     try {
+        // Use the same retry logic as the main app initialization
         await initializeDatabase();
+        console.log('Test DB schema initialized successfully.');
     } catch (error) {
-        console.error("Failed to initialize database for testing:", error);
-        // Optionally, force exit if DB init fails, as tests are likely pointless
+        console.error("FATAL: Failed to initialize database for testing after retries:", error);
+        // Force exit if DB init fails, as tests are likely pointless
         process.exit(1);
     }
 });

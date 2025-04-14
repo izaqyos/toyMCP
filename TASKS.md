@@ -32,4 +32,21 @@
 - [ ] Phase 5: Manual Integration Testing
   - [ ] Start server (`npm start`) and DB (`docker compose up -d db`)
   - [ ] Use `curl` or API client (Postman/Insomnia) to send requests (`todo.add`, `todo.list`, `todo.remove`)
-  - [ ] Verify responses and check DB state 
+  - [ ] Verify responses and check DB state
+
+## Fix Failing Manual Tests (`test_server.sh`)
+
+The following tests from `test_server.sh` are unexpectedly failing, mostly returning `-32600 Invalid Request`. Need to investigate and fix the root cause and potentially update the tests or server logic.
+
+- [x] Fix Test [1]: Add 'Learn HTTPie' (Failing with -32600)
+- [ ] Fix Test [2]: Add 'Test the server' (Failing with -32600)
+- [ ] Fix Test [3]: List all items (Failing with -32600)
+- [ ] Fix Test [4]: Remove the first item (Failing with -32600)
+- [ ] Fix Test [5]: Remove the second item (Failing with -32600)
+- [ ] Fix Test [6]: List items again (Failing with -32600)
+- [ ] Fix Test [E1]: Add item with missing 'text' (Failing with -32600)
+- [ ] Fix Test [E2]: Add item with invalid 'text' type (Failing with -32600)
+- [ ] Fix Test [E3]: Remove item with missing 'id' (Failing with -32600)
+- [ ] Fix Test [E4]: Remove item with non-existent ID (Failing with -32600)
+- [ ] Fix Test [E5]: Call a non-existent method (Failing with -32600)
+- [x] Fix Test [E6]: Send invalid JSON (Failing with -32600 instead of -32700) 

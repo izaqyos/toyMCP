@@ -14,7 +14,33 @@ for (const methodName in mcpMethods) {
 
 // Middleware to handle JSON-RPC requests
 router.post('/', (req, res) => {
+    // --- DEBUG LOGGING START ---
+    console.log('--- MCP Request Received ---');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Raw Body:', req.body);
+    console.log('----------------------------');
+    // --- DEBUG LOGGING END ---
+
     const jsonRPCRequest = req.body;
+
+    // Pre-check: If body parsing failed or it's not a plausible object,
+    // return Parse Error. Note: express.json() middleware might have already caught
+    // syntax errors, but this handles cases where the body is parsed but isn't an object.
+    if (
+        typeof jsonRPCRequest !== 'object' ||
+        jsonRPCRequest === null ||
+        Array.isArray(jsonRPCRequest)
+    ) {
+        // Only send response if headers not already sent (e.g., by global error handler)
+        if (!res.headersSent) {
+             res.status(200).json({
+                jsonrpc: "2.0",
+                error: { code: -32700, message: "Parse error: Invalid JSON received." },
+                id: null
+             });
+        }
+        return;
+    }
 
     // server.receive returns a Promise of a JSONRPCResponse based on the request
     // It handles method execution, parameter validation (basic structure), and error formatting

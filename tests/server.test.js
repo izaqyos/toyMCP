@@ -129,12 +129,12 @@ describe('MCP Endpoint (/mcp)', () => {
                 .post('/mcp')
                 .set('Content-Type', 'application/json')
                 .send('{"jsonrpc": "2.0", "method": "foo", "params": "bar", "id": 1') // Malformed JSON
-                .expect(200); // The JSONRPCServer lib intercepts and sends a valid response
+                .expect(200); // The dedicated error handler should now return 200 OK
 
             expect(res.body.jsonrpc).toBe('2.0');
             expect(res.body.error).toBeDefined();
             expect(res.body.error.code).toBe(-32700); // Parse error
-            expect(res.body.error.message).toBeDefined();
+            expect(res.body.error.message).toContain('Parse error: Invalid JSON received.'); // Check new message
             expect(res.body.id).toBeNull(); // Per JSON-RPC spec for parse error
         });
 

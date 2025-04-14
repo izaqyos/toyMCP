@@ -8,6 +8,31 @@ const app = express();
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// Middleware specifically to catch JSON parsing errors from express.json()
+app.use((err, req, res, next) => {
+  // Check if it's a syntax error related to body parsing
+  // --- DEBUG LOGGING START ---
+  console.log('--- JSON Syntax Error Handler Triggered ---');
+  console.log('Error Type:', Object.prototype.toString.call(err));
+  console.log('Is SyntaxError?:', err instanceof SyntaxError);
+  console.log('Error Status Code:', err.statusCode);
+  console.log('Has Body Property?:', 'body' in err);
+  console.log('Error Message:', err.message);
+  // console.log('Full Error Object:', err); // Uncomment if more detail needed
+  console.log('-----------------------------------------');
+  // --- DEBUG LOGGING END ---
+  if (err instanceof SyntaxError && err.statusCode >= 400 && err.statusCode < 500 && 'body' in err) {
+    console.log('Caught body-parser JSON SyntaxError, sending JSON-RPC Parse Error (-32700)');
+    return res.status(200).json({ // Send 200 OK for JSON-RPC spec compliance
+        jsonrpc: "2.0",
+        error: { code: -32700, message: "Parse error: Invalid JSON received." },
+        id: null // id is null for Parse error according to spec
+    });
+  }
+  // If it's not this specific error, pass it on to the next error handler
+  next(err);
+});
+
 // Mount the MCP router
 app.use('/mcp', mcpRouter);
 

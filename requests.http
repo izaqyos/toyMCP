@@ -1,0 +1,122 @@
+# Manual Test Requests for toyMCP To-Do Server using HTTPie
+#
+# Assumes the server is running on http://127.0.0.1:3000
+# and the PostgreSQL DB is running (ideally freshly initialized or after tests).
+# Run commands sequentially, e.g., using `http --all requests.http`
+# or manually one by one.
+
+###
+# [1] Add "Learn HTTPie" (Expected ID: 1)
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.add' \
+  params:='{"text": "Learn HTTPie"}' \
+  id:=1
+
+###
+# [2] Add "Test the server" (Expected ID: 2)
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.add' \
+  params:='{"text": "Test the server"}' \
+  id:=2
+
+###
+# [3] List all items (Should show ID 1 and ID 2)
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.list' \
+  id:=3
+
+###
+# [4] Remove the first item (Assumes ID is 1)
+# NOTE: Adjust the ID in params:='{"id": <ID_HERE>}' based on previous add response
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.remove' \
+  params:='{"id": 1}' \
+  id:=4
+
+###
+# [5] Remove the second item (Assumes ID is 2)
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.remove' \
+  params:='{"id": 2}' \
+  id:=5
+
+###
+# [6] List items again (Should be empty now)
+# List items again (Should show only the remaining item)
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.list' \
+  id:=6
+
+###
+# --- Error Cases ---
+
+###
+# Add item with missing 'text' parameter
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.add' \
+  params:='{}' \
+  id:=101
+
+###
+# Add item with invalid 'text' type (number instead of string)
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.add' \
+  params:='{"text": 123}' \
+  id:=102
+
+###
+# Remove item with missing 'id' parameter
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.remove' \
+  params:='{}' \
+  id:=103
+
+###
+# Remove item with non-existent ID
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='todo.remove' \
+  params:='{"id": 99999}' \
+  id:=104
+
+###
+# Call a non-existent method
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  jsonrpc='2.0' \
+  method='invalid.method.name' \
+  params:='{}' \
+  id:=105
+
+###
+# Send invalid JSON (Raw body needed here)
+# Expecting JSON-RPC Parse Error (-32700)
+# Run this command directly in your shell:
+# echo '{"jsonrpc": "2.0", "method": "foo", "params": "bar", "id": 1' | http POST http://127.0.0.1:3000/mcp Content-Type:application/json
+
+###
+# Send valid JSON but not a valid JSON-RPC request
+# Expecting JSON-RPC Invalid Request (-32600)
+POST http://127.0.0.1:3000/mcp \
+  Content-Type:application/json \
+  hello='world' \
+  foo='bar' 
