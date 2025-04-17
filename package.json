@@ -9,7 +9,8 @@
   "scripts": {
     "test": "jest",
     "coverage": "jest --coverage",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "swagger:generate": "node scripts/generate-swagger.js"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +27,8 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "supertest": "^7.0.0"
+    "supertest": "^7.0.0",
+    "swagger-ui-dist": "^5.21.0"
   },
   "jest": {
     "setupFilesAfterEnv": [
