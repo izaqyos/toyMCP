@@ -37,8 +37,8 @@ const swaggerOptions = {
 // Generate the specification
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-// Define the output path
-const outputPath = path.join(__dirname, '../public/openapi.json');
+// Define the output path - Changed to /docs
+const outputPath = path.join(__dirname, '../docs/openapi.json');
 const outputDir = path.dirname(outputPath);
 
 // Ensure the output directory exists
