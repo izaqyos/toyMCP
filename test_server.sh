@@ -15,7 +15,7 @@
 # Run this script using: bash test_server.sh
 
 # --- Configuration ---
-BASE_URL="http://127.0.0.1:3000/mcp"
+BASE_URL="http://127.0.0.1:3000/rpc"
 HEADERS="Content-Type:application/json"
 PASSED_COUNT=0
 FAILED_COUNT=0

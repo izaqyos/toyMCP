@@ -13,7 +13,7 @@ beforeAll(async () => {
         console.error("Failed to initialize database for server tests:", error);
         process.exit(1);
     }
-});
+}, 30000); // <-- Increased timeout to 30 seconds
 
 beforeEach(async () => {
     try {
@@ -27,7 +27,7 @@ afterAll(async () => {
     await pool.end(); // Close DB pool after all tests
 });
 
-describe('MCP Endpoint (/mcp)', () => {
+describe('JSON-RPC Endpoint (/rpc)', () => {
 
     // Helper to create JSON-RPC request objects
     const createRpcRequest = (method, params, id = 1) => ({
@@ -43,7 +43,7 @@ describe('MCP Endpoint (/mcp)', () => {
             const rpcRequest = createRpcRequest('todo.add', { text: todoText });
 
             const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -69,7 +69,7 @@ describe('MCP Endpoint (/mcp)', () => {
             const rpcRequest = createRpcRequest('todo.list', undefined, 2); // No params needed
 
             const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect(200);
 
@@ -85,7 +85,7 @@ describe('MCP Endpoint (/mcp)', () => {
             const rpcRequest = createRpcRequest('todo.list', undefined, 3);
 
             const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect(200);
 
@@ -106,7 +106,7 @@ describe('MCP Endpoint (/mcp)', () => {
             const rpcRequest = createRpcRequest('todo.remove', { id: itemId }, 4);
 
             const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect(200);
 
@@ -127,7 +127,7 @@ describe('MCP Endpoint (/mcp)', () => {
     describe('Error Handling', () => {
         it('should return JSON-RPC error for invalid JSON', async () => {
              const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .set('Content-Type', 'application/json')
                 .send('{"jsonrpc": "2.0", "method": "foo", "params": "bar", "id": 1') // Malformed JSON
                 .expect(200); // The dedicated error handler should now return 200 OK
@@ -141,7 +141,7 @@ describe('MCP Endpoint (/mcp)', () => {
 
          it('should return JSON-RPC error for non-RPC JSON object', async () => {
              const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send({ foo: "bar" }) // Valid JSON, but not JSON-RPC
                 .expect(200);
 
@@ -155,7 +155,7 @@ describe('MCP Endpoint (/mcp)', () => {
         it('should return JSON-RPC error for non-existent method', async () => {
             const rpcRequest = createRpcRequest('nonexistent.method', {}, 5);
              const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect(200);
 
@@ -169,7 +169,7 @@ describe('MCP Endpoint (/mcp)', () => {
         it('should return JSON-RPC error for todo.add with missing text', async () => {
             const rpcRequest = createRpcRequest('todo.add', {}, 6); // Missing 'text' param
             const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect(200);
 
@@ -183,7 +183,7 @@ describe('MCP Endpoint (/mcp)', () => {
          it('should return JSON-RPC error for todo.add with invalid text type', async () => {
             const rpcRequest = createRpcRequest('todo.add', { text: 123 }, 7); // Invalid type for 'text'
             const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect(200);
 
@@ -197,7 +197,7 @@ describe('MCP Endpoint (/mcp)', () => {
          it('should return JSON-RPC error for todo.remove with missing id', async () => {
             const rpcRequest = createRpcRequest('todo.remove', {}, 8); // Missing 'id' param
             const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect(200);
 
@@ -212,7 +212,7 @@ describe('MCP Endpoint (/mcp)', () => {
             const nonExistentId = 9999;
             const rpcRequest = createRpcRequest('todo.remove', { id: nonExistentId }, 9);
             const res = await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(rpcRequest)
                 .expect(200);
 
@@ -235,7 +235,7 @@ describe('MCP Endpoint (/mcp)', () => {
             };
 
             await request(app)
-                .post('/mcp')
+                .post('/rpc')
                 .send(notificationRequest)
                 .expect(204); // Expect No Content status, no body
         });

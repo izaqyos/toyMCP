@@ -42,7 +42,7 @@ describe('Server Error Handling Middleware', () => {
         const dummyRequest = { data: 'doesnt matter' };
 
         const res = await request(app)
-            .post('/mcp') // Hit the path where the mock router is mounted
+            .post('/rpc') // CORRECTED: Hit the path where the mock router is mounted
             .send(dummyRequest)
             .expect(500); // Primarily check for 500 status
 
@@ -58,7 +58,7 @@ describe('Server Error Handling Middleware', () => {
 
     it('should use the dedicated syntax error handler for invalid JSON bodies', async () => {
         const res = await request(app)
-            .post('/mcp') // Or any route that uses express.json()
+            .post('/rpc') // CORRECTED: Or any route that uses express.json()
             .set('Content-Type', 'application/json')
             .send('{"invalid": json, ...') // Send malformed JSON
             .expect('Content-Type', /json/) // Expect JSON error response

@@ -33,7 +33,24 @@ It uses Node.js, Express, and PostgreSQL (via Docker) for persistence.
     ```bash
     npm start
     ```
-    The server will initialize the database schema if necessary and start listening on `http://localhost:3000` (or the port specified by the `PORT` environment variable). The MCP endpoint is `http://localhost:3000/mcp`.
+    The server will initialize the database schema if necessary and start listening on `http://localhost:3000` (or the port specified by the `PORT` environment variable).
+    The JSON-RPC endpoint is `http://localhost:3000/rpc`.
+    The Swagger API documentation UI is available at `http://localhost:3000/api-docs`.
+
+### Clean Server Start
+
+If you need to ensure the server starts with a completely fresh database (e.g., before running manual end-to-end tests or to reset state), you can use the `clean_start.sh` script:
+
+1.  **Stop the running server** (if any) by pressing `Ctrl+C` in the terminal where it's running.
+2.  **Ensure the script is executable:**
+    ```bash
+    chmod +x clean_start.sh
+    ```
+3.  **Run the script:**
+    ```bash
+    ./clean_start.sh
+    ```
+    This script will stop and remove the database container (`docker compose down`), restart it (`docker compose up -d db`), and then start the Node.js server (`npm start`).
 
 ## Running Tests
 
@@ -63,9 +80,17 @@ chmod +x run_full_test.sh test_server.sh # Ensure scripts are executable
 ./run_full_test.sh
 ```
 
+## API Documentation
+
+Interactive API documentation is available via Swagger UI when the server is running:
+
+*   **Swagger UI:** `http://localhost:3000/api-docs`
+
+This documentation is generated automatically from JSDoc comments in the source code (`src/mcp_methods.js`) using `swagger-jsdoc`.
+
 ## API Usage (JSON-RPC 2.0 via HTTP POST)
 
-Send POST requests to `http://localhost:3000/mcp` with `Content-Type: application/json` and a JSON-RPC 2.0 payload in the body.
+Send POST requests to `http://localhost:3000/rpc` with `Content-Type: application/json` and a JSON-RPC 2.0 payload in the body.
 
 **Example Tool:** `curl`
 
@@ -73,7 +98,7 @@ Send POST requests to `http://localhost:3000/mcp` with `Content-Type: applicatio
     ```bash
     curl -X POST -H "Content-Type: application/json" \
          -d '{"jsonrpc": "2.0", "method": "todo.add", "params": {"text": "Buy groceries"}, "id": 1}' \
-         http://localhost:3000/mcp
+         http://localhost:3000/rpc
     ```
     *Success Response:*
     ```json
@@ -92,7 +117,7 @@ Send POST requests to `http://localhost:3000/mcp` with `Content-Type: applicatio
     ```bash
     curl -X POST -H "Content-Type: application/json" \
          -d '{"jsonrpc": "2.0", "method": "todo.list", "id": 2}' \
-         http://localhost:3000/mcp
+         http://localhost:3000/rpc
     ```
     *Success Response (example):*
     ```json
@@ -115,7 +140,7 @@ Send POST requests to `http://localhost:3000/mcp` with `Content-Type: applicatio
     ```bash
     curl -X POST -H "Content-Type: application/json" \
          -d '{"jsonrpc": "2.0", "method": "todo.remove", "params": {"id": 1}, "id": 3}' \
-         http://localhost:3000/mcp
+         http://localhost:3000/rpc
     ```
     *Success Response:*
     ```json
@@ -135,7 +160,7 @@ Send POST requests to `http://localhost:3000/mcp` with `Content-Type: applicatio
     # Request to remove ID 999 which doesn't exist
     curl -X POST -H "Content-Type: application/json" \
          -d '{"jsonrpc": "2.0", "method": "todo.remove", "params": {"id": 999}, "id": 4}' \
-         http://localhost:3000/mcp
+         http://localhost:3000/rpc
     ```
     *Response:*
     ```json

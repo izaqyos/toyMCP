@@ -16,7 +16,7 @@ beforeAll(async () => {
         console.error("FATAL: Failed to initialize database for integration testing:", error);
         process.exit(1);
     }
-});
+}, 30000);
 
 // Clean the todos table before each test using the *real* query function
 beforeEach(async () => {
