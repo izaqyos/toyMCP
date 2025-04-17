@@ -82,11 +82,12 @@ chmod +x run_full_test.sh test_server.sh # Ensure scripts are executable
 
 ## API Documentation
 
-Interactive API documentation is available via Swagger UI when the server is running:
+Interactive API documentation is available via Swagger UI both locally (when the server is running) and deployed via GitHub Pages:
 
-*   **Swagger UI:** `http://localhost:3000/api-docs`
+*   **Local Swagger UI:** `http://localhost:3000/api-docs`
+*   **GitHub Pages Swagger UI:** `https://izaqyos.github.io/toyMCP/swagger-ui/`
 
-This documentation is generated automatically from JSDoc comments in the source code (`src/mcp_methods.js`) using `swagger-jsdoc`.
+The documentation is generated automatically from JSDoc comments in `src/swagger_definitions.js` using `swagger-jsdoc`.
 
 ## API Usage (JSON-RPC 2.0 via HTTP POST)
 
