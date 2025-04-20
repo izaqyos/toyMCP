@@ -29,24 +29,26 @@
   - [x] Add `start` script to `package.json`
   - [x] Update `README.md` with setup/usage
   - [x] Update `TASKS.md` (this file)
-- [ ] Phase 5: Manual Integration Testing
-  - [ ] Start server (`npm start`) and DB (`docker compose up -d db`)
-  - [ ] Use `curl` or API client (Postman/Insomnia) to send requests (`todo.add`, `todo.list`, `todo.remove`)
-  - [ ] Verify responses and check DB state
+  - [x] Add Swagger documentation (local and GitHub Pages)
+  - [x] Add `.env.example` file
+- [x] Phase 5: Manual Integration Testing
+  - [x] Start server (`npm start`) and DB (`docker compose up -d db`)
+  - [x] Use `curl` (`test_server.sh`) or API client (Postman/Insomnia) to send requests (`todo.add`, `todo.list`, `todo.remove`)
+  - [x] Verify responses and check DB state (via `test_server.sh`)
 
 ## Fix Failing Manual Tests (`test_server.sh`)
 
-The following tests from `test_server.sh` are unexpectedly failing, mostly returning `-32600 Invalid Request`. Need to investigate and fix the root cause and potentially update the tests or server logic.
+(All tests passed after fixing endpoint URL in `test_server.sh`)
 
-- [x] Fix Test [1]: Add 'Learn HTTPie' (Failing with -32600)
-- [ ] Fix Test [2]: Add 'Test the server' (Failing with -32600)
-- [ ] Fix Test [3]: List all items (Failing with -32600)
-- [ ] Fix Test [4]: Remove the first item (Failing with -32600)
-- [ ] Fix Test [5]: Remove the second item (Failing with -32600)
-- [ ] Fix Test [6]: List items again (Failing with -32600)
-- [ ] Fix Test [E1]: Add item with missing 'text' (Failing with -32600)
-- [ ] Fix Test [E2]: Add item with invalid 'text' type (Failing with -32600)
-- [ ] Fix Test [E3]: Remove item with missing 'id' (Failing with -32600)
-- [ ] Fix Test [E4]: Remove item with non-existent ID (Failing with -32600)
-- [ ] Fix Test [E5]: Call a non-existent method (Failing with -32600)
-- [x] Fix Test [E6]: Send invalid JSON (Failing with -32600 instead of -32700) 
+- [x] Fix Test [1]: Add 'Learn HTTPie'
+- [x] Fix Test [2]: Add 'Test the server'
+- [x] Fix Test [3]: List all items
+- [x] Fix Test [4]: Remove the first item
+- [x] Fix Test [5]: Remove the second item
+- [x] Fix Test [6]: List items again
+- [x] Fix Test [E1]: Add item with missing 'text'
+- [x] Fix Test [E2]: Add item with invalid 'text' type
+- [x] Fix Test [E3]: Remove item with missing 'id'
+- [x] Fix Test [E4]: Remove item with non-existent ID
+- [x] Fix Test [E5]: Call a non-existent method
+- [x] Fix Test [E6]: Send invalid JSON 
