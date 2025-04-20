@@ -25,17 +25,21 @@ const swaggerOptions = {
         description: 'Local development server',
       },
     ],
-    // Since methods are defined via JSDoc, paths will be automatically added.
-    // We can define common components here if needed, but they are defined in mcp_methods.js JSDoc now.
-    // components: { ... } 
+    // Components defined in mcp_methods.js JSDoc will be merged
+    components: { } // Add an empty components object to ensure it gets populated
   },
-  // Path to the API docs
-  // Tells swagger-jsdoc where to find JSDoc comments
-  apis: ['./src/mcp_methods.js'], 
+  // Path to the API docs - Now points only to the definitions file
+  apis: ['./src/swagger_definitions.js'], 
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 // --- End Swagger JSDoc Setup ---
+
+// --- DEBUG: Log the generated spec ---
+console.log('--- Generated Swagger Spec ---');
+console.log(JSON.stringify(swaggerSpec, null, 2));
+console.log('-----------------------------');
+// --- END DEBUG ---
 
 // Middleware to parse JSON bodies
 app.use(express.json());
