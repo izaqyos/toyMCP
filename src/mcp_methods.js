@@ -6,6 +6,71 @@ const TODO_NOT_FOUND_ERROR_CODE = 1001;
 
 const methods = {
     /**
+     * Provides information about the service and its available methods.
+     * Follows common conventions for MCP discovery.
+     * @returns {Promise<object>} A promise that resolves to the discovery document.
+     */
+    'mcp.discover': async () => {
+        return {
+            mcp_version: "1.0.0", // Simple version for now
+            name: "ToyMCP Todo Service",
+            description: "A simple To-Do list manager implementing MCP concepts.",
+            methods: [
+                {
+                    name: "todo.list",
+                    description: "Lists all existing todo items, ordered by creation time.",
+                    parameters: [], // No parameters required
+                    returns: {
+                        description: "An array of TodoItem objects.",
+                        schema: { type: "array", items: { "$ref": "#/components/schemas/TodoItem" } } // Reference OpenAPI schema
+                    }
+                },
+                {
+                    name: "todo.add",
+                    description: "Adds a new todo item to the list.",
+                    parameters: [
+                        {
+                            name: "text",
+                            type: "string",
+                            required: true,
+                            description: "The content of the todo item."
+                        }
+                    ],
+                    returns: {
+                        description: "The newly created TodoItem object.",
+                        schema: { "$ref": "#/components/schemas/TodoItem" } // Reference OpenAPI schema
+                    }
+                },
+                {
+                    name: "todo.remove",
+                    description: "Removes a todo item by its ID.",
+                    parameters: [
+                        {
+                            name: "id",
+                            type: "number",
+                            required: true,
+                            description: "The unique identifier of the todo item to remove."
+                        }
+                    ],
+                    returns: {
+                        description: "The removed TodoItem object.",
+                        schema: { "$ref": "#/components/schemas/TodoItem" } // Reference OpenAPI schema
+                    }
+                },
+                 {
+                    name: "mcp.discover",
+                    description: "Returns this discovery document describing the service capabilities.",
+                    parameters: [],
+                    returns: {
+                        description: "The MCP discovery document.",
+                        schema: { type: "object" } // Self-reference (simplified)
+                    }
+                }
+            ]
+        };
+    },
+
+    /**
      * Lists all todo items.
      * @returns {Promise<Array<object>>} A promise that resolves to an array of todo items.
      */

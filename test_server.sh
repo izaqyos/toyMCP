@@ -104,6 +104,11 @@ payload_6='{"jsonrpc": "2.0", "method": "todo.list", "id": 6}'
 check_6='.error == null and (.result | length) == 0' # Expect empty array if remove worked
 run_test "[6]" "List items again (Should be empty if DB started clean)" "$payload_6" "$check_6" "'result' is an empty array, no 'error'"
 
+# [7] Call mcp.discover
+payload_7='{"jsonrpc": "2.0", "method": "mcp.discover", "id": 7}'
+check_7='.error == null and .result.name == "ToyMCP Todo Service" and (.result.methods | map(.name) | contains(["todo.list", "todo.add", "todo.remove", "mcp.discover"]))'
+run_test "[7]" "Call mcp.discover (Should return service info)" "$payload_7" "$check_7" "'result' with service info and all methods listed"
+
 echo -e "\n--- Error Cases ---"
 
 # [E1] Add item with missing 'text' parameter

@@ -168,4 +168,38 @@ describe('MCP Methods', () => {
             expect(db.query).toHaveBeenCalledTimes(1);
         });
     });
+
+    // --- mcp.discover ---
+    describe('mcp.discover', () => {
+        it('should return the discovery document without database interaction', async () => {
+            const result = await mcpMethods['mcp.discover']();
+
+            // Verify the basic structure
+            expect(result).toBeDefined();
+            expect(result.mcp_version).toBeDefined();
+            expect(result.name).toBeDefined();
+            expect(result.description).toBeDefined();
+            expect(result.methods).toBeInstanceOf(Array);
+
+            // Verify that all expected methods are listed
+            const methodNames = result.methods.map(m => m.name);
+            expect(methodNames).toContain('todo.list');
+            expect(methodNames).toContain('todo.add');
+            expect(methodNames).toContain('todo.remove');
+            expect(methodNames).toContain('mcp.discover');
+
+            // Optional: Add more detailed checks for specific method definitions if needed
+            const todoAddDef = result.methods.find(m => m.name === 'todo.add');
+            expect(todoAddDef).toBeDefined();
+            expect(todoAddDef.parameters).toBeInstanceOf(Array);
+            expect(todoAddDef.parameters.length).toBe(1);
+            expect(todoAddDef.parameters[0].name).toBe('text');
+            expect(todoAddDef.parameters[0].required).toBe(true);
+            expect(todoAddDef.returns.schema['$ref']).toContain('TodoItem');
+
+            // Ensure no database interaction occurred
+            expect(db.query).not.toHaveBeenCalled();
+        });
+    });
+
 }); 

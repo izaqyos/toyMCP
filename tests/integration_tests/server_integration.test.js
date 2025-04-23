@@ -38,6 +38,37 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
     });
 
     describe('Valid Requests', () => {
+        it('should handle mcp.discover request successfully', async () => {
+            const rpcRequest = createRpcRequest('mcp.discover', undefined, 0); // No params, unique ID
+
+            const res = await request(app)
+                .post('/rpc')
+                .send(rpcRequest)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // Check JSON-RPC structure
+            expect(res.body.jsonrpc).toBe('2.0');
+            expect(res.body.id).toBe(rpcRequest.id);
+            expect(res.body.error).toBeUndefined();
+            expect(res.body.result).toBeDefined();
+
+            // Check discovery structure
+            const discovery = res.body.result;
+            expect(discovery.mcp_version).toBeDefined();
+            expect(discovery.name).toEqual('ToyMCP Todo Service');
+            expect(discovery.description).toBeDefined();
+            expect(discovery.methods).toBeInstanceOf(Array);
+            expect(discovery.methods.length).toBeGreaterThanOrEqual(4); // At least list, add, remove, discover
+
+            // Check if expected methods are present
+            const methodNames = discovery.methods.map(m => m.name);
+            expect(methodNames).toContain('mcp.discover');
+            expect(methodNames).toContain('todo.list');
+            expect(methodNames).toContain('todo.add');
+            expect(methodNames).toContain('todo.remove');
+        });
+
         it('should handle todo.add request successfully', async () => {
             const todoText = 'Integration test add';
             const rpcRequest = createRpcRequest('todo.add', { text: todoText });

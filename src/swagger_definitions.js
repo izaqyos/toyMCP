@@ -80,12 +80,14 @@
  *         Specify the desired method and its parameters within the JSON request body.
  *
  *         **Available Methods:**
+ *         *   `mcp.discover`: Returns service discovery information.
  *         *   `todo.list`: Lists all todo items. Takes no parameters.
  *         *   `todo.add`: Adds a new todo item. Requires `params: { text: string }`.
  *         *   `todo.remove`: Removes a todo item by ID. Requires `params: { id: number }`.
  *       tags:
  *         - JSON-RPC
  *         - Todo
+ *         - MCP
  *       requestBody:
  *         description: A standard JSON-RPC 2.0 request object.
  *         required: true
@@ -101,7 +103,7 @@
  *                 method:
  *                   type: string
  *                   description: The name of the method to be invoked.
- *                   example: "todo.list"
+ *                   example: "mcp.discover"
  *                 params:
  *                   type: object
  *                   description: Parameters for the method (structure depends on the method).
@@ -116,6 +118,12 @@
  *                 - method
  *                 - id # Technically required for non-notifications
  *             examples:
+ *               McpDiscover:
+ *                 summary: Example for mcp.discover
+ *                 value:
+ *                   jsonrpc: "2.0"
+ *                   method: "mcp.discover"
+ *                   id: 9
  *               TodoList:
  *                 summary: Example for todo.list
  *                 value:
@@ -152,10 +160,13 @@
  *                     type: string
  *                     example: "2.0"
  *                   result:
+ *                     # Result can be the discovery object, array of todos, or single todo
+ *                     # Using a generic object/array type here for simplicity in OpenAPI
  *                     type: [object, array]
  *                     nullable: true
  *                     description: The result of a successful method call (structure depends on the method).
- *                     example: [{ "id": 1, "text": "Example", "completed": false, "created_at": "2023-01-01T12:00:00Z" }] # Example for todo.list
+ *                     # Example below is for todo.list
+ *                     example: [{ "id": 1, "text": "Example", "completed": false, "created_at": "2023-01-01T12:00:00Z" }]
  *                   error:
  *                     nullable: true
  *                     allOf:

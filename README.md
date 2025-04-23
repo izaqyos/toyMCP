@@ -93,7 +93,39 @@ The documentation is generated automatically from JSDoc comments in `src/swagger
 
 Send POST requests to `http://localhost:3000/rpc` with `Content-Type: application/json` and a JSON-RPC 2.0 payload in the body.
 
+**Available Methods:**
+
+*   `mcp.discover`: Describes the service and its available methods.
+*   `todo.list`: Lists all todo items.
+*   `todo.add`: Adds a new todo item (`params: { "text": "..." }`).
+*   `todo.remove`: Removes a todo item (`params: { "id": ... }`).
+
 **Example Tool:** `curl`
+
+*   **Discover Service (`mcp.discover`)**
+    ```bash
+    curl -X POST -H "Content-Type: application/json" \
+         -d '{"jsonrpc": "2.0", "method": "mcp.discover", "id": 1}' \
+         http://localhost:3000/rpc
+    ```
+    *Success Response (example):*
+    ```json
+    {
+        "jsonrpc": "2.0",
+        "result": {
+            "mcp_version": "1.0.0",
+            "name": "ToyMCP Todo Service",
+            "description": "A simple To-Do list manager implementing MCP concepts.",
+            "methods": [
+                {"name": "todo.list", ...},
+                {"name": "todo.add", ...},
+                {"name": "todo.remove", ...},
+                {"name": "mcp.discover", ...}
+            ]
+        },
+        "id": 1
+    }
+    ```
 
 *   **Add Item (`todo.add`)**
     ```bash
