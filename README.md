@@ -4,6 +4,13 @@ This is a simple example server implementing a To-Do list CRUD API using the Mod
 
 It uses Node.js, Express, and PostgreSQL (via Docker) for persistence.
 
+## Components
+
+This project consists of two main components:
+
+1. **MCP Server**: A JSON-RPC based API server for managing todo items
+2. **Agent Framework**: A natural language interface to the MCP server using AI models
+
 ## Setup
 
 1.  **Prerequisites:**
@@ -89,22 +96,52 @@ Interactive API documentation is available via Swagger UI both locally (when the
 
 The documentation is generated automatically from JSDoc comments in `src/swagger_definitions.js` using `swagger-jsdoc`.
 
-## API Usage (JSON-RPC 2.0 via HTTP POST)
+## API Usage
 
-Send POST requests to `http://localhost:3000/rpc` with `Content-Type: application/json` and a JSON-RPC 2.0 payload in the body.
+### Authentication
+
+Most API endpoints require authentication using a JSON Web Token (JWT).
+
+1.  **Login:** First, send a POST request to `/auth/login` with your username and password in the JSON body:
+    ```bash
+    curl -X POST -H "Content-Type: application/json" \
+         -d '{"username": "testuser", "password": "password123"}' \
+         http://localhost:3000/auth/login
+    ```
+    *Success Response:*
+    ```json
+    {
+        "message": "Login successful",
+        "user": { "id": 1, "username": "testuser" },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+    ```
+2.  **Use Token:** Copy the received `token` value. For subsequent requests to protected endpoints (like `/rpc`), include it in the `Authorization` header as a Bearer token:
+    ```bash
+    TOKEN="YOUR_JWT_TOKEN_HERE" # Replace with the actual token
+    curl -X POST -H "Content-Type: application/json" \
+         -H "Authorization: Bearer $TOKEN" \
+         -d '{"jsonrpc": "2.0", "method": "mcp.discover", "id": 1}' \
+         http://localhost:3000/rpc
+    ```
+
+### JSON-RPC Endpoint (`/rpc`)
+
+Send POST requests to `http://localhost:3000/rpc` with `Content-Type: application/json`, an `Authorization: Bearer <token>` header, and a JSON-RPC 2.0 payload in the body.
 
 **Available Methods:**
 
-*   `mcp.discover`: Describes the service and its available methods.
 *   `todo.list`: Lists all todo items.
 *   `todo.add`: Adds a new todo item (`params: { "text": "..." }`).
 *   `todo.remove`: Removes a todo item (`params: { "id": ... }`).
+*   `mcp.discover`: Describes the service and its available methods.
 
-**Example Tool:** `curl`
+**Example Tool:** `curl` (assuming you have a valid $TOKEN obtained via `/auth/login`)
 
 *   **Discover Service (`mcp.discover`)**
     ```bash
     curl -X POST -H "Content-Type: application/json" \
+         -H "Authorization: Bearer $TOKEN" \
          -d '{"jsonrpc": "2.0", "method": "mcp.discover", "id": 1}' \
          http://localhost:3000/rpc
     ```
@@ -130,6 +167,7 @@ Send POST requests to `http://localhost:3000/rpc` with `Content-Type: applicatio
 *   **Add Item (`todo.add`)**
     ```bash
     curl -X POST -H "Content-Type: application/json" \
+         -H "Authorization: Bearer $TOKEN" \
          -d '{"jsonrpc": "2.0", "method": "todo.add", "params": {"text": "Buy groceries"}, "id": 1}' \
          http://localhost:3000/rpc
     ```
@@ -149,6 +187,7 @@ Send POST requests to `http://localhost:3000/rpc` with `Content-Type: applicatio
 *   **List Items (`todo.list`)**
     ```bash
     curl -X POST -H "Content-Type: application/json" \
+         -H "Authorization: Bearer $TOKEN" \
          -d '{"jsonrpc": "2.0", "method": "todo.list", "id": 2}' \
          http://localhost:3000/rpc
     ```
@@ -172,6 +211,7 @@ Send POST requests to `http://localhost:3000/rpc` with `Content-Type: applicatio
     (Assuming an item with ID 1 exists)
     ```bash
     curl -X POST -H "Content-Type: application/json" \
+         -H "Authorization: Bearer $TOKEN" \
          -d '{"jsonrpc": "2.0", "method": "todo.remove", "params": {"id": 1}, "id": 3}' \
          http://localhost:3000/rpc
     ```
@@ -190,8 +230,8 @@ Send POST requests to `http://localhost:3000/rpc` with `Content-Type: applicatio
 
 *   **Error Response Example (Item Not Found)**
     ```bash
-    # Request to remove ID 999 which doesn't exist
     curl -X POST -H "Content-Type: application/json" \
+         -H "Authorization: Bearer $TOKEN" \
          -d '{"jsonrpc": "2.0", "method": "todo.remove", "params": {"id": 999}, "id": 4}' \
          http://localhost:3000/rpc
     ```
@@ -205,4 +245,49 @@ Send POST requests to `http://localhost:3000/rpc` with `Content-Type: applicatio
         },
         "id": 4
     }
-    ``` 
+    ```
+
+## Agent Framework
+
+The repository includes an AI-powered agent framework that provides a natural language interface to the MCP server. The agent uses either local Ollama models or OpenAI's cloud-based models to interpret user instructions and perform the appropriate actions on the todo list.
+
+### Architecture
+
+```
+┌───────────────┐    ┌────────────────┐    ┌───────────────┐
+│ LLM Provider  │◄───┤ Agent Framework├───►│  toyMCP API   │
+│ (Ollama/Cloud)│    │                │    │  (Todo Server)│
+└───────────────┘    └────────────────┘    └───────────────┘
+```
+
+### Setup and Usage
+
+The agent framework is located in the `agent-framework/` directory. To use it:
+
+1. **Set up the environment:**
+   ```bash
+   cd agent-framework
+   npm install
+   cp .env-example .env    # Configure settings as needed
+   npm run build
+   ```
+
+2. **Use natural language to manage your todo list:**
+   ```bash
+   # Add a task
+   node index.js "Add milk to my shopping list"
+
+   # List all tasks
+   node index.js "What's on my todo list?"
+
+   # Remove a task
+   node index.js "Remove the shopping task"
+   
+   # Debug mode
+   node index.js --debug "Add a reminder to call mom"
+   ```
+
+For detailed documentation on the agent framework, refer to:
+- `agent-framework/README.md`: Setup and usage instructions
+- `agent-framework/ARCHITECTURE.md`: Technical design and interaction flow
+- `agent-framework/CHANGELOG.md`: Development history and changes 
