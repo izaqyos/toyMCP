@@ -8,45 +8,45 @@ const pool = new Pool(config.db);
 // Function to wait for a specified duration
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Function to initialize the database schema with retries
-async function initializeDatabase(maxRetries = 5, retryDelay = 3000) {
+// Function to read and execute the schema file
+async function initializeDatabase(retries = 5, delay = 3000) {
     const schemaPath = path.join(__dirname, 'schema.sql');
-    let schemaSQL;
     try {
-        schemaSQL = fs.readFileSync(schemaPath, 'utf8');
-    } catch (readErr) {
-        console.error(`Failed to read schema file at ${schemaPath}:`, readErr);
-        throw readErr; // Cannot proceed without schema
-    }
+        const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+        // Split schema into individual statements (simple split, might need refinement for complex SQL)
+        const statements = schemaSql.split(';').filter(s => s.trim() !== '');
 
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        let client;
-        try {
-            console.log(`Attempt ${attempt}/${maxRetries}: Connecting to database...`);
-            client = await pool.connect();
-            console.log(`Attempt ${attempt}/${maxRetries}: Database connected. Executing schema...`);
-            await client.query(schemaSQL); // Execute CREATE TABLE IF NOT EXISTS...
-            console.log(`Attempt ${attempt}/${maxRetries}: Database schema initialized successfully.`);
-            client.release();
-            return; // Success, exit the function
-        } catch (err) {
-            console.error(`Attempt ${attempt}/${maxRetries}: Error during DB initialization:`, err.message);
-            if (client) {
-                client.release(); // Ensure client is released on error
+        // Attempt to connect and execute schema
+        for (let i = 0; i < retries; i++) {
+            try {
+                const client = await pool.connect();
+                console.log('Connected to database. Initializing schema...');
+                // Execute each statement individually
+                for (const statement of statements) {
+                    await client.query(statement); 
+                }
+                client.release();
+                console.log('Database schema initialized (or already exists) successfully.');
+                return; // Success, exit the function
+            } catch (err) {
+                console.error(`Attempt ${i + 1} failed: Could not connect or initialize schema.`, err.message);
+                if (i === retries - 1) {
+                    console.error('Max retries reached. Database initialization failed.');
+                    throw err; // Rethrow the last error if max retries reached
+                }
+                console.log(`Retrying in ${delay / 1000} seconds...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
             }
-            if (attempt === maxRetries) {
-                console.error('Max retries reached. Failed to initialize database.');
-                throw err; // Throw the last error after max retries
-            }
-            console.log(`Waiting ${retryDelay / 1000} seconds before next attempt...`);
-            await delay(retryDelay);
         }
+    } catch (err) {
+        console.error('Failed to read schema file:', err);
+        throw err; // Rethrow error if file reading fails
     }
 }
 
-// Export the pool for querying and the initialization function
+// Export the pool, query function, and initialization function
 module.exports = {
     pool,
     query: (text, params) => pool.query(text, params),
-    initializeDatabase,
+    initializeDatabase
 }; 

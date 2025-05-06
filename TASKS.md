@@ -52,3 +52,8 @@
 - [x] Fix Test [E4]: Remove item with non-existent ID
 - [x] Fix Test [E5]: Call a non-existent method
 - [x] Fix Test [E6]: Send invalid JSON 
+
+┌───────────────┐    ┌────────────────┐    ┌───────────────┐
+│ LLM Provider  │◄───┤ Agent Framework├───►│  toyMCP API   │
+│ (Ollama/Cloud)│    │                │    │  (Todo Server)│
+└───────────────┘    └────────────────┘    └───────────────┘ 

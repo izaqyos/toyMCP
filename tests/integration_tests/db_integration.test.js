@@ -9,12 +9,12 @@ const { pool, query, initializeDatabase } = require('../../src/db');
 // This relies on the actual initializeDatabase connecting to the Docker container.
 beforeAll(async () => {
     try {
-        // Use the actual initializeDatabase with retry logic
-        await initializeDatabase();
+        await initializeDatabase(); // Let errors propagate
+        // If successful, continue
         console.log('Test DB schema initialized successfully for integration tests.');
     } catch (error) {
         console.error("FATAL: Failed to initialize database for integration testing:", error);
-        process.exit(1);
+        throw error; // <-- Re-throw the error so Jest handles it
     }
 }, 30000);
 

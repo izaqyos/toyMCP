@@ -1,6 +1,11 @@
 /**
  * @openapi
  * components:
+ *   securitySchemes:
+ *     bearerAuth: # Can be any name, used to reference the scheme
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT # Optional, specifies format
  *   schemas:
  *     TodoItem:
  *       type: object
@@ -62,10 +67,44 @@
  *       required:
  *         - code
  *         - message
+ *     LoginCredentials:
+ *       type: object
+ *       properties:
+ *         username:
+ *           type: string
+ *           example: testuser
+ *         password:
+ *           type: string
+ *           format: password
+ *           example: password123
+ *       required:
+ *         - username
+ *         - password
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: Login successful
+ *         user:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *               example: 1
+ *             username:
+ *               type: string
+ *               example: testuser
+ *         token:
+ *           type: string
+ *           description: JSON Web Token for subsequent authenticated requests.
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *
  * # Note: Removed requestBodies and responses components as they are complex to generalize
  * #       for multiple methods within a single OpenAPI operation. Examples in the requestBody
  * #       and a combined response schema are used instead.
+ * security: # Apply the security scheme globally by default
+ *   - bearerAuth: []
  */
 
 /**
@@ -73,11 +112,14 @@
  * paths:
  *   /rpc:
  *     post:
- *       summary: JSON-RPC Endpoint
+ *       summary: JSON-RPC Endpoint (Authentication Required)
  *       operationId: jsonRpcCall
+ *       security: # Explicitly state security applies (inherits from global)
+ *         - bearerAuth: []
  *       description: |
  *         This single endpoint handles all JSON-RPC 2.0 method calls.
- *         Specify the desired method and its parameters within the JSON request body.
+ *         **Requires Authentication:** A valid JWT must be provided in the `Authorization: Bearer <token>` header.
+ *         Obtain a token via the `/auth/login` endpoint.
  *
  *         **Available Methods:**
  *         *   `mcp.discover`: Returns service discovery information.
@@ -179,6 +221,34 @@
  *                   - id
  *                   # Note: Either result or error MUST be present, but not both.
  *                   # OpenAPI schema validation can't easily enforce this XOR condition perfectly.
+ *         '401':
+ *            description: Unauthorized (Missing or invalid JWT)
+ *
+ *   /auth/login:
+ *     post:
+ *       summary: Obtain Authentication Token
+ *       operationId: loginUser
+ *       description: Authenticate using username and password to receive a JWT.
+ *       tags:
+ *         - Authentication
+ *       # No security required for login itself
+ *       security: []
+ *       requestBody:
+ *         description: User credentials for login.
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginCredentials'
+ *       responses:
+ *         '200':
+ *           description: Authentication successful, JWT returned.
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 $ref: '#/components/schemas/LoginResponse'
+ *         '401':
+ *           description: Authentication failed (Incorrect username or password).
  */
 
 // This file is only for JSDoc definitions, no actual code needed. 

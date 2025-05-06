@@ -1,4 +1,31 @@
-Attempt 1/5: Connecting to database...
-Attempt 1/5: Database connected. Executing schema...
-Attempt 1/5: Database schema initialized successfully.
-Test DB schema initialized successfully for integration tests.
+[ERROR] Error fetching todo list: Error: Database connection failed
+    at Object.<anonymous> (/Users/i500695/work/code/AI/MCP/toyMCP/tests/unit_tests/mcp_methods.test.js:50:44)
+    at Promise.then.completed (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:316:40)
+    at _runTest (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-runner/build/runTest.js:444:34)
+[ERROR] Error adding todo item: Error: Insert conflict
+    at Object.<anonymous> (/Users/i500695/work/code/AI/MCP/toyMCP/tests/unit_tests/mcp_methods.test.js:99:44)
+    at Promise.then.completed (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:316:40)
+    at _runTest (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/i500695/work/code/AI/MCP/toyMCP/node_modules/jest-runner/build/runTest.js:444:34)
+[ERROR] Error removing todo item with ID 1: {}

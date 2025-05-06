@@ -2,11 +2,15 @@ const express = require('express');
 const config = require('./config');
 const { initializeDatabase } = require('./db');
 const mcpRouter = require('./mcp_router'); // We'll create this next
+const authRouter = require('./auth/auth_router'); // Import auth router
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc'); // Changed from js-yaml
 // const YAML = require('js-yaml'); // No longer needed
 // const fs = require('fs'); // No longer needed for loading spec
 const path = require('path');
+const passport = require('passport'); // Add passport require
+const seedDefaultUser = require('./auth/seedUser'); // Import the seeder
+require('./auth/passport-config'); // Require passport config to register strategies
 
 const app = express();
 
@@ -44,6 +48,9 @@ console.log('-----------------------------');
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// Initialize Passport
+app.use(passport.initialize());
+
 // Middleware specifically to catch JSON parsing errors from express.json()
 app.use((err, req, res, next) => {
   // Check if it's a syntax error related to body parsing
@@ -72,8 +79,15 @@ app.use((err, req, res, next) => {
 // Setup Swagger UI - Use the dynamically generated spec
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Mount the MCP router
-app.use('/rpc', mcpRouter);
+// Mount the Authentication router
+app.use('/auth', authRouter); // Add this BEFORE the protected /rpc router
+
+// Mount the MCP router - PROTECTED by JWT strategy
+app.use(
+  '/rpc',
+  passport.authenticate('jwt', { session: false }), // Apply JWT auth middleware here
+  mcpRouter // Only runs if authentication succeeds
+);
 
 // Basic Root Route (optional, for simple check)
 app.get('/', (req, res) => {
@@ -121,6 +135,9 @@ async function startServer() {
     try {
         // Ensure DB is ready before starting the server
         await initializeDatabase();
+
+        // Seed the default user (runs only if user doesn't exist)
+        await seedDefaultUser();
 
         app.listen(config.server.port, () => {
             console.log(`Server listening on http://localhost:${config.server.port}`);

@@ -109,6 +109,22 @@ export class MCPAgent {
     }
   }
   
+  /**
+   * Remove a task by ID with confirmation
+   * @param id The ID of the task to remove
+   * @returns Confirmation message
+   */
+  async removeTask(id: number): Promise<string> {
+    this.log(`Removing task with ID: ${id}`);
+    try {
+      const removeResult = await this.executeRPC('todo.remove', { id });
+      return `Removed task: ${removeResult.result.text}`;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return `Failed to remove task: ${errorMessage}`;
+    }
+  }
+  
   async executeTask(task: string): Promise<string> {
     this.log('Executing task:', task);
     
@@ -151,13 +167,16 @@ export class MCPAgent {
           // If ID is known
           if (decision.id) {
             this.log('Action: remove task with ID:', decision.id);
-            const removeResult = await this.executeRPC('todo.remove', { id: decision.id });
-            return `Removed task: ${removeResult.result.text}`;
+            return await this.removeTask(decision.id);
           } 
           // Otherwise list items and suggest which one might match
           else {
             this.log('Action: find task to remove matching:', task);
             const listResult = await this.executeRPC('todo.list');
+            
+            if (!listResult.result || !Array.isArray(listResult.result) || listResult.result.length === 0) {
+              return "No tasks found to remove.";
+            }
             
             const removalPrompt = `
               User wants to remove this task: "${task}"
@@ -171,6 +190,20 @@ export class MCPAgent {
             const suggestion = await this.llmProvider.complete(removalPrompt);
             this.log('LLM suggested removing task ID:', suggestion.trim());
             
+            // Try to parse the suggested ID and actually remove it
+            const suggestedId = parseInt(suggestion.trim(), 10);
+            if (!isNaN(suggestedId)) {
+              this.log('Removing suggested task ID:', suggestedId);
+              try {
+                const removeResult = await this.executeRPC('todo.remove', { id: suggestedId });
+                return `Removed task: ${removeResult.result.text} (ID: ${suggestedId})`;
+              } catch (error: unknown) {
+                this.log('Failed to remove task with suggested ID, showing options instead');
+                // If removal fails, show the list of options as before
+              }
+            }
+            
+            // If we get here, either the ID wasn't parseable or the removal failed
             return `To remove a task related to "${task}", consider these options:\n${
               listResult.result.map((item: TodoItem) => `- [${item.id}] ${item.text}`).join('\n')
             }\nSuggested ID to remove: ${suggestion.trim()}`;

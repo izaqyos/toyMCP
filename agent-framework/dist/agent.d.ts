@@ -18,5 +18,11 @@ export declare class MCPAgent {
      * @returns Formatted string with all tasks
      */
     listTasks(): Promise<string>;
+    /**
+     * Remove a task by ID with confirmation
+     * @param id The ID of the task to remove
+     * @returns Confirmation message
+     */
+    removeTask(id: number): Promise<string>;
     executeTask(task: string): Promise<string>;
 }

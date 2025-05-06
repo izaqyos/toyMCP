@@ -2,18 +2,33 @@ const request = require('supertest');
 
 const app = require('../../src/server'); // Import app normally
 const { pool, query, initializeDatabase } = require('../../src/db');
+const seedDefaultUser = require('../../src/auth/seedUser'); // Need to seed for login test
+
+// Global variable to store JWT for tests
+let authToken;
 
 // Database setup/teardown for integration tests
 beforeAll(async () => {
     try {
-        // Ensure schema exists. If server.js already ran initializeDatabase,
-        // this call might be redundant but is safe due to "IF NOT EXISTS".
         await initializeDatabase();
+        // Ensure the default user exists for login tests
+        await seedDefaultUser(); 
+
+        // Login once before all tests to get a valid token
+        const res = await request(app)
+            .post('/auth/login')
+            .send({ username: 'testuser', password: 'password123' })
+            .expect(200);
+        
+        expect(res.body.token).toBeDefined();
+        authToken = res.body.token; // Store the token
+        console.log('Auth token obtained for integration tests.');
+
     } catch (error) {
-        console.error("Failed to initialize database for server tests:", error);
+        console.error("Failed during test setup (DB init, seeding, or login):", error);
         process.exit(1);
     }
-}, 30000); // <-- Increased timeout to 30 seconds
+}, 40000); // Increased timeout slightly more for init+seed+login
 
 beforeEach(async () => {
     try {
@@ -27,6 +42,42 @@ afterAll(async () => {
     await pool.end(); // Close DB pool after all tests
 });
 
+describe('Authentication Endpoint (/auth)', () => {
+    it('should return 401 for invalid credentials', async () => {
+        await request(app)
+            .post('/auth/login')
+            .send({ username: 'testuser', password: 'wrongpassword' })
+            .expect(401)
+            .then((res) => {
+                expect(res.body.message).toContain('Incorrect username or password');
+            });
+    });
+
+    it('should return 401 for non-existent user', async () => {
+        await request(app)
+            .post('/auth/login')
+            .send({ username: 'nosuchuser', password: 'password123' })
+            .expect(401)
+            .then((res) => {
+                expect(res.body.message).toContain('Incorrect username or password');
+            });
+    });
+
+    it('should return JWT for valid credentials', async () => {
+        const res = await request(app)
+            .post('/auth/login')
+            .send({ username: 'testuser', password: 'password123' })
+            .expect(200)
+            .expect('Content-Type', /json/);
+
+        expect(res.body.message).toBe('Login successful');
+        expect(res.body.user).toBeDefined();
+        expect(res.body.user.username).toBe('testuser');
+        expect(res.body.token).toBeDefined();
+        expect(typeof res.body.token).toBe('string');
+    });
+});
+
 describe('JSON-RPC Endpoint (/rpc)', () => {
 
     // Helper to create JSON-RPC request objects
@@ -37,12 +88,35 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         id,
     });
 
-    describe('Valid Requests', () => {
+    it('should return 401 Unauthorized if no token is provided', async () => {
+        const rpcRequest = createRpcRequest('mcp.discover', undefined, 99);
+        await request(app)
+            .post('/rpc')
+            .send(rpcRequest)
+            .expect(401);
+    });
+
+    it('should return 401 Unauthorized if token is invalid/expired', async () => {
+        const rpcRequest = createRpcRequest('mcp.discover', undefined, 98);
+        await request(app)
+            .post('/rpc')
+            .set('Authorization', 'Bearer invalidtoken123')
+            .send(rpcRequest)
+            .expect(401);
+    });
+
+    describe('Valid Authenticated Requests', () => {
+        // Use the authToken obtained in beforeAll
+        if (!authToken) {
+            throw new Error('Authentication token not obtained in beforeAll hook');
+        }
+
         it('should handle mcp.discover request successfully', async () => {
-            const rpcRequest = createRpcRequest('mcp.discover', undefined, 0); // No params, unique ID
+            const rpcRequest = createRpcRequest('mcp.discover', undefined, 0);
 
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -75,6 +149,7 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
 
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -97,10 +172,11 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         });
 
         it('should handle todo.list request successfully (empty)', async () => {
-            const rpcRequest = createRpcRequest('todo.list', undefined, 2); // No params needed
+            const rpcRequest = createRpcRequest('todo.list', undefined, 2);
 
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect(200);
 
@@ -111,12 +187,12 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         });
 
         it('should handle todo.list request successfully (with items)', async () => {
-            // Add items first
             await query('INSERT INTO todos(text) VALUES($1), ($2)', ['Item A', 'Item B']);
             const rpcRequest = createRpcRequest('todo.list', undefined, 3);
 
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect(200);
 
@@ -130,14 +206,13 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         });
 
         it('should handle todo.remove request successfully', async () => {
-            // Add an item to remove
             const insertRes = await query('INSERT INTO todos(text) VALUES($1) RETURNING id', ['Item to Delete']);
             const itemId = insertRes.rows[0].id;
-
             const rpcRequest = createRpcRequest('todo.remove', { id: itemId }, 4);
 
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect(200);
 
@@ -155,13 +230,19 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         });
     });
 
-    describe('Error Handling', () => {
+    describe('Error Handling (Authenticated)', () => {
+        // Ensure authToken is available for these tests too
+        if (!authToken) {
+            throw new Error('Authentication token not obtained in beforeAll hook');
+        }
+
         it('should return JSON-RPC error for invalid JSON', async () => {
              const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .set('Content-Type', 'application/json')
-                .send('{"jsonrpc": "2.0", "method": "foo", "params": "bar", "id": 1') // Malformed JSON
-                .expect(200); // The dedicated error handler should now return 200 OK
+                .send('{"jsonrpc": "2.0", "method": "foo", "params": "bar", "id": 1')
+                .expect(200); 
 
             expect(res.body.jsonrpc).toBe('2.0');
             expect(res.body.error).toBeDefined();
@@ -173,7 +254,8 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
          it('should return JSON-RPC error for non-RPC JSON object', async () => {
              const res = await request(app)
                 .post('/rpc')
-                .send({ foo: "bar" }) // Valid JSON, but not JSON-RPC
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({ foo: "bar" })
                 .expect(200);
 
             expect(res.body.jsonrpc).toBe('2.0');
@@ -187,6 +269,7 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
             const rpcRequest = createRpcRequest('nonexistent.method', {}, 5);
              const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect(200);
 
@@ -198,9 +281,10 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         });
 
         it('should return JSON-RPC error for todo.add with missing text', async () => {
-            const rpcRequest = createRpcRequest('todo.add', {}, 6); // Missing 'text' param
+            const rpcRequest = createRpcRequest('todo.add', {}, 6); 
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect(200);
 
@@ -212,9 +296,10 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         });
 
          it('should return JSON-RPC error for todo.add with invalid text type', async () => {
-            const rpcRequest = createRpcRequest('todo.add', { text: 123 }, 7); // Invalid type for 'text'
+            const rpcRequest = createRpcRequest('todo.add', { text: 123 }, 7); 
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect(200);
 
@@ -226,9 +311,10 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         });
 
          it('should return JSON-RPC error for todo.remove with missing id', async () => {
-            const rpcRequest = createRpcRequest('todo.remove', {}, 8); // Missing 'id' param
+            const rpcRequest = createRpcRequest('todo.remove', {}, 8); 
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect(200);
 
@@ -244,6 +330,7 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
             const rpcRequest = createRpcRequest('todo.remove', { id: nonExistentId }, 9);
             const res = await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(rpcRequest)
                 .expect(200);
 
@@ -256,19 +343,22 @@ describe('JSON-RPC Endpoint (/rpc)', () => {
         });
     });
 
-    describe('Notifications', () => {
+    describe('Notifications (Authenticated)', () => {
+         if (!authToken) {
+            throw new Error('Authentication token not obtained in beforeAll hook');
+        }
         it('should handle a notification request (no id) with 204 No Content', async () => {
             const notificationRequest = {
                 jsonrpc: '2.0',
-                method: 'todo.add', // Method doesn't strictly matter, id absence is key
+                method: 'todo.add', 
                 params: { text: 'This is a notification' }
-                // No 'id' field
             };
 
             await request(app)
                 .post('/rpc')
+                .set('Authorization', `Bearer ${authToken}`)
                 .send(notificationRequest)
-                .expect(204); // Expect No Content status, no body
+                .expect(204); 
         });
     });
 
